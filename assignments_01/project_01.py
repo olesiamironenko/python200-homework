@@ -60,7 +60,7 @@ def load_multiple_years_data():
 
     merged_df = pd.concat(dataframes, ignore_index=True)
 
-    output_path = OUTPUT_DIR / "  "
+    output_path = OUTPUT_DIR / "merged_happiness.csv"
     merged_df.to_csv(output_path, index=False)
 
     logger.info(f"Merged data shape: {merged_df.shape}")
