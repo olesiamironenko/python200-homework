@@ -182,8 +182,8 @@ def hypothesis_testing(df):
 
     regions = df["region"].dropna().unique()
 
-    region_a = regions[0]
-    region_b = regions[1]
+    region_a = "North America and ANZ"
+    region_b = "Sub-Saharan Africa"
 
     scores_a = df[df["region"] == region_a]["happiness_score"].dropna()
     scores_b = df[df["region"] == region_b]["happiness_score"].dropna()
@@ -267,7 +267,7 @@ def summary_report(df, descriptive_results, ttest_results, correlation_results):
 
     region_means = descriptive_results["by_region"]
     top_regions = region_means.head(3)
-    bottom_regions = region_means.tail(3).sort_values()
+    bottom_regions = region_means.sort_values().head(3)
 
     results_df = correlation_results["results"]
     adjusted_alpha = correlation_results["adjusted_alpha"]
