@@ -8,7 +8,7 @@ from prefect import task, flow, get_run_logger
 
 # path to run the program from either PYTHON200-HOMEWORK folder or assignment_01 folder
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR.parent / "resources" / "happiness_project"
+DATA_DIR = BASE_DIR / "resources" / "happiness_project"
 OUTPUT_DIR = BASE_DIR / "outputs"
 
 ALPHA = 0.05
@@ -23,7 +23,7 @@ COLUMN_MAPPING = {
 
 @task(name="Task 1: Load and Merge World Happiness Data",
     retries=3, 
-    retry_delay_seconds=3
+    retry_delay_seconds=2
 )
 def load_multiple_years_data():
     logger = get_run_logger()
@@ -92,7 +92,13 @@ def descriptive_statistics(df):
     )
     logger.info(f"Mean happiness by region:\n{mean_happiness_by_region}")
 
-    return mean_happiness_by_region
+    return {
+        "overall_mean": mean_happiness_overall, 
+        "overall_median": median_happiness_overall, 
+        "overall_std": std_happiness_overall, 
+        "by_year": mean_happiness_by_year, 
+        "by_region": mean_happiness_by_region
+    }
 
 @task(name="Task 3: Generate Visualizations")
 def visual_exploration(df):
@@ -154,13 +160,12 @@ def hypothesis_testing(df):
     logger.info(f"2019 vs 2020 p-value: {p_value:.4f}")
 
     if p_value < ALPHA:
-        interpretation = (
-            "The difference between 2019 and 2020 happiness scores is statistically significant."
-        )
+        if mean_2020 < mean_2019:
+            interpretation = "The average global happiness score was lower in 2020 than in 2019. This decrease is statistically significant, suggesting that happiness changed after the pandemic began."
+        else:
+            interpretation = "The average global happiness score was higher in 2020 than in 2019.This increase is statistically significant."
     else:
-        interpretation = (
-            "The difference between 2019 and 2020 happiness scores is not statistically significant."
-        )
+        interpretation = "The average happiness scores for 2019 and 2020 differ slightly, but the difference is not statistically significant. Based on this data, we cannot conclude that the pandemic changed global happiness scores."
 
     logger.info(interpretation)
 
@@ -237,19 +242,36 @@ def correlation_analysis(df):
     results_df.to_csv(output_path, index=False)
     logger.info(f"Saved correlation results to {output_path}")
 
-    return results_df
+    return {
+        "results": results_df,
+        "adjusted_alpha": adjusted_alpha
+    }
 
 @task(name="Task 6: Generate Summary Report")
-def summary_report(df, region_means, ttest_results, correlation_results):
+def summary_report(df, descriptive_results, ttest_results, correlation_results):
     logger = get_run_logger()
 
     total_countries = df["country"].nunique()
     total_years = df["year"].nunique()
 
+    region_means = descriptive_results["by_region"]
     top_regions = region_means.head(3)
     bottom_regions = region_means.tail(3)
 
-    significant_corrs = correlation_results[correlation_results["p_value"] < ALPHA]
+    top_regions_text = ", ".join(
+        f"{region}: {score:.2f}"
+        for region, score in top_regions.items()
+    )
+
+    bottom_regions_text = ", ".join(
+        f"{region}: {score:.2f}"
+        for region, score in bottom_regions.items()
+    )
+
+    results_df = correlation_results["results"]
+    adjusted_alpha = correlation_results["adjusted_alpha"]
+
+    significant_corrs = results_df[results_df["p_value"] < adjusted_alpha]
 
     if not significant_corrs.empty:
         strongest = significant_corrs.iloc[
@@ -258,31 +280,31 @@ def summary_report(df, region_means, ttest_results, correlation_results):
         strongest_variable = strongest["variable"]
         strongest_correlation = strongest["correlation"]
     else:
-        strongest_variable = "None"
+        strongest_variable = None
         strongest_correlation = None
 
     logger.info(f"Total countries: {total_countries}")
     logger.info(f"Total years: {total_years}")
-    logger.info(f"Top 3 regions by mean happiness:\n{top_regions}")
-    logger.info(f"Bottom 3 regions by mean happiness:\n{bottom_regions}")
+    logger.info(f"Top 3 regions by mean happiness:\n{top_regions_text}")
+    logger.info(f"Bottom 3 regions by mean happiness:\n{bottom_regions_text}")
     logger.info(f"Pre/post-2020 test result: {ttest_results['interpretation']}")
 
     if strongest_correlation is not None:
         logger.info(
-            f"Strongest significant correlation: {strongest_variable} "
+            f"Strongest significant correlation after Bonferroni correction: {strongest_variable} "
             f"with correlation {strongest_correlation:.4f}"
         )
     else:
-        logger.info("No significant correlations found.")
+        logger.info("No correlations remained statistically significant after Bonferroni correction.")
 
 @flow(name="World Happiness Pipeline")
 def happiness_pipeline():
     df = load_multiple_years_data()
-    region_means = descriptive_statistics(df)
+    descriptive_results = descriptive_statistics(df)
     visual_exploration(df)
     ttest_results = hypothesis_testing(df)
     correlation_results = correlation_analysis(df)
-    summary_report(df, region_means, ttest_results, correlation_results)
+    summary_report(df, descriptive_results, ttest_results, correlation_results)
 
 
 if __name__ == "__main__":

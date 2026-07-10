@@ -1,5 +1,4 @@
-#  --- Pandas Review ---
-
+# --- Pandas Review ---
 print("--- Pandas Review ---")
 print("\n")
 
@@ -136,7 +135,7 @@ print(df_sorted.head(3))
 print("\n")
 
 
-#  --- NumPy Review ---
+# --- NumPy Review ---
 
 print("--- NumPy Review ---")
 print("\n")
@@ -249,7 +248,7 @@ print(f"Standard Deviation: {np.std(arr_normal)}")
 print("\n")
 
 
-#  --- Matplotlib Review ---
+# --- Matplotlib Review ---
 print("--- Matplotlib Review ---")
 print("\n")
 
@@ -299,7 +298,7 @@ plt.show()
 
 # --- Matplotlib Question 3 ---
 print("Matplotlib Question 3:")
-print("See 'Scatter Plot of Two Datasets in the pop-up window.")
+print("See 'Scatter Plot of Two Datasets' in the pop-up window.")
 print("\n")
 
 # Task:
@@ -352,8 +351,8 @@ plt.show()
 print("--- Descriptive Statistics Review ---")
 print("\n")
 
-# --- Descriptive Stats Question 1 ---
-print("Descriptive Stats Question 1:")
+# --- Descriptive Statistics Question 1 ---
+print("Descriptive Statistics Question 1:")
 
 # Task:
 # Given the list below, use NumPy to compute and print the mean, median, variance, and standard deviation. Label each printed value.
@@ -370,8 +369,8 @@ print(f"Variance: {np.var(data_np)}")
 print(f"Standard Deviation: {np.std(data_np)}")
 print("\n")
 
-# --- Descriptive Stats Question 2 ---
-print("Descriptive Stats Question 2:")
+# --- Descriptive Statistics Question 2 ---
+print("Descriptive Statistics Question 2:")
 print("See the histogram 'Distribution of Scores' in the pop-up window.")
 print("\n")
 
@@ -390,8 +389,8 @@ plt.ylabel("Frequency")
 plt.show()
 
 
-# --- Descriptive Stats Question 3 ---
-print("Descriptive Stats Question 3:")
+# --- Descriptive Statistics Question 3 ---
+print("Descriptive Statistics Question 3:")
 print("See the boxplot 'Score Comparison' in the pop-up window.")
 print("\n")
 
@@ -410,8 +409,8 @@ plt.ylabel("Scores")
 plt.show()
 
 
-# --- Descriptive Stats Question 4 ---
-print("Descriptive Stats Question 4:")
+# --- Descriptive Statistics Question 4 ---
+print("Descriptive Statistics Question 4:")
 print("See the boxplot 'Distribution Comparison' in the pop-up window.")
 print("\n")
 
@@ -436,8 +435,8 @@ print("According to the box plots, the exponential distribution is more skewed t
 print("Median is a more appropriate measure of central tendency in this case because the box plot shows data skewness with many outliers on one side, and the median is less affected by extreme values compared to the mean.")
 print("\n")
 
-# --- Descriptive Stats Question 5 ---
-print("Descriptive Stats Question 5:")
+# --- Descriptive Statistics Question 5 ---
+print("Descriptive Statistics Question 5:")
 
 # import stats module from scipy
 from scipy import stats
@@ -521,7 +520,7 @@ print("Hypothesis Testing Question 4:")
 # Given:
 scores = [72, 68, 75, 70, 69, 74, 71, 73]
 
-# Solution
+# Solution:
 # Run a one-sample t-test on scores dataset
 t_stat, p_value = stats.ttest_1samp(scores, 70)
 
@@ -553,7 +552,7 @@ print("Hypothesis Testing Question 6:")
 print("Conclusion: The independent samples t-test indicates that there is a statistically significant difference between the scores of group_a and group_b. Given the low p-value, it is unlikely that this difference is due to random chance, suggesting that the observed difference reflects a true effect.")
 
 # --- Correlation Review ---
-print("Correlation Review:")
+print("--- Correlation Review ---")
 print("\n")
 
 # --- Correlation Question 1 ---
@@ -663,8 +662,8 @@ plt.title("Correlation Heatmap")
 plt.show()
 
 
-# --- Piplines ---
-print("--- Piplines ---")
+# --- Pipelines ---
+print("--- Pipelines ---")
 print("\n")
 
 # --- Pipeline Question 1 ---

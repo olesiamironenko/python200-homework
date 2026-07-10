@@ -49,3 +49,7 @@ def data_pipeline(arr):
 if __name__ == "__main__":  
     result = data_pipeline(arr)
     print(result)
+
+print("Answer 1: This pipeline is simple—just three small functions operating on a small dataset. Using Prefect here adds extra setup and overhead compared to calling the functions directly, so it is not necessary for a simple script like this.")
+
+print("Answer 2: Prefect becomes valuable when working with larger or automated data pipelines. For example, it can orchestrate tasks that load data from APIs or databases, process large datasets, retry failed tasks, schedule recurring workflows, monitor execution, and log pipeline progress. Even if each individual task is simple, Prefect makes the overall workflow more reliable, maintainable, and easier to monitor in production.")
