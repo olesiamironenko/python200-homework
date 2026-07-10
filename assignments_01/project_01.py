@@ -161,11 +161,22 @@ def hypothesis_testing(df):
 
     if p_value < ALPHA:
         if mean_2020 < mean_2019:
-            interpretation = "The average global happiness score was lower in 2020 than in 2019. This decrease is statistically significant, suggesting that happiness changed after the pandemic began."
+            interpretation = (
+                f"The mean happiness score decreased from {mean_2019:.2f} in 2019 to {mean_2020:.2f} in 2020. The p-value ({p_value:.4f}) is less than {ALPHA}, indicating that this decrease is statistically significant."
+            )
         else:
-            interpretation = "The average global happiness score was higher in 2020 than in 2019.This increase is statistically significant."
+            interpretation = (
+                f"The mean happiness score increased from {mean_2019:.2f} in 2019 to {mean_2020:.2f} in 2020. The p-value ({p_value:.4f}) is less than {ALPHA}, indicating that this increase is statistically significant."
+            )
     else:
-        interpretation = "The average happiness scores for 2019 and 2020 differ slightly, but the difference is not statistically significant. Based on this data, we cannot conclude that the pandemic changed global happiness scores."
+        if mean_2020 < mean_2019:
+            interpretation = (
+                f"The mean happiness score decreased from {mean_2019:.2f} in 2019 to {mean_2020:.2f} in 2020, but the p-value ({p_value:.4f}) is greater than {ALPHA}. The observed decrease is not statistically significant."
+            )
+        else:
+            interpretation = (
+                f"The mean happiness score increased from {mean_2019:.2f} in 2019 to {mean_2020:.2f} in 2020, but the p-value ({p_value:.4f}) is greater than {ALPHA}. The observed increase is not statistically significant."
+            )
 
     logger.info(interpretation)
 
