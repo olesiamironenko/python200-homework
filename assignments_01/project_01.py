@@ -256,17 +256,7 @@ def summary_report(df, descriptive_results, ttest_results, correlation_results):
 
     region_means = descriptive_results["by_region"]
     top_regions = region_means.head(3)
-    bottom_regions = region_means.tail(3)
-
-    top_regions_text = ", ".join(
-        f"{region}: {score:.2f}"
-        for region, score in top_regions.items()
-    )
-
-    bottom_regions_text = ", ".join(
-        f"{region}: {score:.2f}"
-        for region, score in bottom_regions.items()
-    )
+    bottom_regions = region_means.tail(3).sort_values()
 
     results_df = correlation_results["results"]
     adjusted_alpha = correlation_results["adjusted_alpha"]
@@ -274,8 +264,8 @@ def summary_report(df, descriptive_results, ttest_results, correlation_results):
     significant_corrs = results_df[results_df["p_value"] < adjusted_alpha]
 
     if not significant_corrs.empty:
-        strongest = significant_corrs.iloc[
-            significant_corrs["correlation"].abs().argmax()
+        strongest = significant_corrs.loc[
+            significant_corrs["correlation"].abs().idxmax()
         ]
         strongest_variable = strongest["variable"]
         strongest_correlation = strongest["correlation"]
@@ -283,16 +273,25 @@ def summary_report(df, descriptive_results, ttest_results, correlation_results):
         strongest_variable = None
         strongest_correlation = None
 
-    logger.info(f"Total countries: {total_countries}")
-    logger.info(f"Total years: {total_years}")
-    logger.info(f"Top 3 regions by mean happiness:\n{top_regions_text}")
-    logger.info(f"Bottom 3 regions by mean happiness:\n{bottom_regions_text}")
+    logger.info(
+        f"Dataset includes {total_countries} countries across {total_years} years."
+    )
+    for rank, (region, score) in enumerate(top_regions.items(), start=1):
+        logger.info(
+            f"Top region #{rank}: {region} "
+            f"with a mean happiness score of {score:.2f}"
+        )
+    for rank, (region, score) in enumerate(bottom_regions.items(), start=1):
+        logger.info(
+            f"Bottom region #{rank}: {region} "
+            f"with a mean happiness score of {score:.2f}"
+        )
     logger.info(f"Pre/post-2020 test result: {ttest_results['interpretation']}")
 
     if strongest_correlation is not None:
         logger.info(
-            f"Strongest significant correlation after Bonferroni correction: {strongest_variable} "
-            f"with correlation {strongest_correlation:.4f}"
+            "Strongest significant correlation after Bonferroni correction: "
+            f"{strongest_variable} with correlation {strongest_correlation:.4f}"
         )
     else:
         logger.info("No correlations remained statistically significant after Bonferroni correction.")
