@@ -39,17 +39,17 @@ import matplotlib.pyplot as plt
 
 X_clusters, _ = make_blobs(n_samples=120, centers=3, cluster_std=0.8, random_state=7)
 
-# 1. Create the model
+# Create the model
 kmeans = KMeans(n_clusters=3, random_state=42)
-# 2. Fit -- find cluster centers
+# Fit -- find cluster centers
 kmeans.fit(X_clusters)          
-# 3. Predict a label for each point                
+# Predict a label for each point                
 labels = kmeans.predict(X_clusters) 
-# 4. Print the cluster centers and how many points fell into each cluster
+# Print the cluster centers and how many points fell into each cluster
 print(kmeans.cluster_centers_)
 print(np.bincount(labels))
 
-# 5. Create a figure for plot
+# Create a figure for plot
 plt.figure(figsize=(8, 6))
 
 # Plot the clustered data points
