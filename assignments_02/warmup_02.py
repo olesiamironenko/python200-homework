@@ -17,19 +17,19 @@ new_years = np.array([4, 8]).reshape(-1, 1)
 model = LinearRegression()                    # 1. create model
 model.fit(years, salary)                      # 2. fit model to data (learn)
 salary_predicted = model.predict(new_years)   # 3. predict with new data
-print(salary_predicted)  
-print(model.coef_[0])
-print(model.intercept_)
+print(f"Salary predicted: {salary_predicted}")  
+print(f"Slope: {model.coef_[0]}")
+print(f"Intersept: {model.intercept_}")
 
 
 # Q2
 x = np.array([10, 20, 30, 40, 50])
 print(x.shape)
 x = x.reshape(-1, 1)
-print(x.shape)
+print(f"Array shape: {x.shape}")
 
-# scikit-learn needs X to be 2D because it always treats data (X in this case) as a table/dataframe which has columns and rows.
-# Columns represent sammples, rows represent features.
+# scikit-learn needs x to be 2D because it expects 
+# a feature matrix with one row per sample and one column per feature.
 
 
 #Q3
@@ -46,8 +46,8 @@ kmeans.fit(X_clusters)
 # Predict a label for each point                
 labels = kmeans.predict(X_clusters) 
 # Print the cluster centers and how many points fell into each cluster
-print(kmeans.cluster_centers_)
-print(np.bincount(labels))
+print(f"Cluster Centers: {kmeans.cluster_centers_}")
+print(f"Quantity of Points in Clusters: {np.bincount(labels)}")
 
 # Create a figure for plot
 plt.figure(figsize=(8, 6))
@@ -142,10 +142,10 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # Print the shapes
-print("X_train shape:", X_train.shape)
-print("X_test shape:", X_test.shape)
-print("y_train shape:", y_train.shape)
-print("y_test shape:", y_test.shape)
+print(f"X_train shape: {X_train.shape}")
+print(f"X_test shape: {X_test.shape}")
+print(f"y_train shape: {y_train.shape}")
+print(f"y_test shape: {y_test.shape}")
 
 # Q3
 # Create the linear regression model
@@ -155,19 +155,19 @@ model = LinearRegression()
 model.fit(X_train, y_train)
 
 # Print the slope and intercept
-print("Slope:", model.coef_[0])
-print("Intercept:", model.intercept_)
+print(f"Slope: {model.coef_[0]}")
+print(f"Intercept: {model.intercept_}")
 
 # Predict on the test set
 y_pred = model.predict(X_test)
 
 # Calculate RMSE
 rmse = np.sqrt(np.mean((y_pred - y_test) ** 2))
-print("RMSE:", rmse)
+print(f"RMSE: {rmse}")
 
 # Calculate R²
 r2 = model.score(X_test, y_test)
-print("R² on the X test set:", r2)
+print(f"R² on the X test set: {r2}")
 
 # ----------------------------------------
 # Interpretation:
@@ -198,11 +198,11 @@ model_full.fit(X_train, y_train)
 # Test R²
 r2_full = model_full.score(X_test, y_test)
 
-print("R² on the X_full test set::", r2_full)
+print(f"R² on the X_full test set: {r2_full}")
 
 # Print the coefficients
-print("age coefficient:    ", model_full.coef_[0])
-print("smoker coefficient: ", model_full.coef_[1])
+print(f"age coefficient: {model_full.coef_[0]}")
+print(f"smoker coefficient: {model_full.coef_[1]}")
 
 # ----------------------------------------
 # Interpretation:
