@@ -272,7 +272,7 @@ plt.legend()
 
 plt.tight_layout()
 
-plt.savefig("outputs/pca_explained_variance.png")
+plt.savefig("outputs/pca_cumulative_explained_variance.png")
 
 plt.close()
 
@@ -408,10 +408,30 @@ for depth in tree_depths:
 tree_depth_df = pd.DataFrame(tree_depth_results)
 print(tree_depth_df.to_string(index=False))
 
-# I selected max_depth=10 because it produced strong test accuracy
-# without the extreme training/test accuracy gap of the unlimited tree.
-# The unlimited tree fits the training data almost perfectly, which
-# suggests that it memorizes details that may not generalize.
+# Decision Tree Depth Selection
+#
+# At max_depth=3, the model had the lowest training and test accuracy,
+# suggesting that the tree was too simple and underfit the data.
+#
+# Increasing the depth to 5 improved both training and test accuracy
+# while keeping the difference between them relatively small.
+#
+# At max_depth=10, test accuracy improved again, but training accuracy
+# increased much more sharply. This larger train-test gap suggests that
+# the model was beginning to overfit.
+#
+# With max_depth=None, the tree achieved almost perfect training
+# accuracy (0.9997), but test accuracy improved only slightly compared
+# with depth 10. This indicates stronger overfitting because the tree
+# learned the training data in much greater detail without a comparable
+# improvement on unseen data.
+#
+# I selected max_depth=10 for the final Decision Tree. It achieved
+# nearly the highest test accuracy while remaining simpler and less
+# overfit than the unrestricted tree. Although max_depth=None had a
+# slightly higher test accuracy, the improvement was only about 0.2
+# percentage points and did not justify the much greater model
+# complexity.
 chosen_depth = 10
 
 # Train and evaluate the final tree
@@ -691,178 +711,153 @@ for feature in sorted(common_features):
 
 # Task 4
 # Cross-validation results
+# Helper function
+def run_cross_validation(model_name, model, X_data, y_data):
+    scores = cross_val_score(
+        model,
+        X_data,
+        y_data,
+        cv=5,
+    )
+
+    print(f"\n{model_name}")
+    print("-" * 50)
+    print(f"Fold scores: {scores}")
+    print(f"Mean accuracy: {scores.mean():.4f}")
+    print(f"Standard deviation: {scores.std():.4f}")
+
+    return {
+        "Model": model_name,
+        "Mean Accuracy": scores.mean(),
+        "Std Dev": scores.std(),
+    }
+
 cv_results = []
 
-# KNN (Unscaled) cross-validation
-scores = cross_val_score(
-    KNeighborsClassifier(n_neighbors=5),
-    X_train,
-    y_train,
-    cv=5,
+# KNN (Unscaled)
+cv_results.append(
+    run_cross_validation(
+        model_name="KNN — Unscaled",
+        model=KNeighborsClassifier(n_neighbors=5),
+        X_data=X_train,
+        y_data=y_train,
+    )
 )
 
-cv_results.append({
-    "Model": "KNN — Unscaled",
-    "Mean Accuracy": scores.mean(),
-    "Std Dev": scores.std(),
-})
 
-print("\nKNN — Unscaled Cross-Validation")
-print(f"Fold scores: {scores}")
-print(f"Mean accuracy: {scores.mean():.4f}")
-print(f"Standard deviation: {scores.std():.4f}")
-
-# KNN (Scaled) cross-validation
-# Use Pipline to avoid information leak from the validation fold into the scaler
+# KNN (Scaled)
+# Use a pipeline so the scaler is fitted separately within each fold.
 knn_scaled_pipeline = Pipeline([
     ("scaler", StandardScaler()),
-    ("knn", KNeighborsClassifier(n_neighbors=5))
+    ("knn", KNeighborsClassifier(n_neighbors=5)),
 ])
 
-scores = cross_val_score(
-    knn_scaled_pipeline,
-    X_train,
-    y_train,
-    cv=5,
+cv_results.append(
+    run_cross_validation(
+        model_name="KNN — Scaled",
+        model=knn_scaled_pipeline,
+        X_data=X_train,
+        y_data=y_train,
+    )
 )
 
-cv_results.append({
-    "Model": "KNN — Scaled",
-    "Mean Accuracy": scores.mean(),
-    "Std Dev": scores.std(),
-})
 
-print("\nKNN — Scaled Cross-Validation")
-print(f"Fold scores: {scores}")
-print(f"Mean accuracy: {scores.mean():.4f}")
-print(f"Standard deviation: {scores.std():.4f}")
-
-# KNN (PCA) cross-validation
-# Use Pipline to avoid information leak from the validation fold into the scaler
+# KNN (PCA)
+# Use a pipeline so scaling and PCA are fitted separately within each fold.
 knn_pca_pipeline = Pipeline([
     ("scaler", StandardScaler()),
     ("pca", PCA(n_components=n)),
-    ("knn", KNeighborsClassifier(n_neighbors=5))
+    ("knn", KNeighborsClassifier(n_neighbors=5)),
 ])
 
-scores = cross_val_score(
-    knn_pca_pipeline,
-    X_train,
-    y_train,
-    cv=5,
+cv_results.append(
+    run_cross_validation(
+        model_name="KNN — PCA",
+        model=knn_pca_pipeline,
+        X_data=X_train,
+        y_data=y_train,
+    )
 )
 
-cv_results.append({
-    "Model": "KNN — PCA",
-    "Mean Accuracy": scores.mean(),
-    "Std Dev": scores.std(),
-})
 
-print("\nKNN — PCA Cross-Validation")
-print(f"Fold scores: {scores}")
-print(f"Mean accuracy: {scores.mean():.4f}")
-print(f"Standard deviation: {scores.std():.4f}")
-
-# Decision Tree cross-validation
-scores = cross_val_score(
-    DecisionTreeClassifier(
-        max_depth=chosen_depth,
-        random_state=42,
-    ),
-    X_train,
-    y_train,
-    cv=5,
+# Decision Tree
+decision_tree_cv = DecisionTreeClassifier(
+    max_depth=chosen_depth,
+    random_state=42,
 )
 
-cv_results.append({
-    "Model": "Decision Tree",
-    "Mean Accuracy": scores.mean(),
-    "Std Dev": scores.std(),
-})
-
-print("\nDecision Tree Cross-Validation")
-print(f"Fold scores: {scores}")
-print(f"Mean accuracy: {scores.mean():.4f}")
-print(f"Standard deviation: {scores.std():.4f}")
-
-# Random Forest cross-validation
-scores = cross_val_score(
-    RandomForestClassifier(
-        n_estimators=100,
-        random_state=42,
-    ),
-    X_train,
-    y_train,
-    cv=5,
+cv_results.append(
+    run_cross_validation(
+        model_name="Decision Tree",
+        model=decision_tree_cv,
+        X_data=X_train,
+        y_data=y_train,
+    )
 )
 
-cv_results.append({
-    "Model": "Random Forest",
-    "Mean Accuracy": scores.mean(),
-    "Std Dev": scores.std(),
-})
 
-print("\nRandom Forest Cross-Validation")
-print(f"Fold scores: {scores}")
-print(f"Mean accuracy: {scores.mean():.4f}")
-print(f"Standard deviation: {scores.std():.4f}")
+# Random Forest
+random_forest_cv = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42,
+)
+
+cv_results.append(
+    run_cross_validation(
+        model_name="Random Forest",
+        model=random_forest_cv,
+        X_data=X_train,
+        y_data=y_train,
+    )
+)
+
 
 # Logistic Regression (Scaled)
 logistic_scaled_pipeline = Pipeline([
     ("scaler", StandardScaler()),
-    ("logistic", LogisticRegression(
-        C=1.0,
-        max_iter=1000,
-        solver="liblinear",
-    ))
+    (
+        "logistic",
+        LogisticRegression(
+            C=1.0,
+            max_iter=1000,
+            solver="liblinear",
+        ),
+    ),
 ])
 
-scores = cross_val_score(
-    logistic_scaled_pipeline,
-    X_train,
-    y_train,
-    cv=5,
+cv_results.append(
+    run_cross_validation(
+        model_name="Logistic Regression — Scaled",
+        model=logistic_scaled_pipeline,
+        X_data=X_train,
+        y_data=y_train,
+    )
 )
 
-cv_results.append({
-    "Model": "Logistic Regression — Scaled",
-    "Mean Accuracy": scores.mean(),
-    "Std Dev": scores.std(),
-})
-
-print("\nLogistic Regression — Scaled Cross-Validation")
-print(f"Fold scores: {scores}")
-print(f"Mean accuracy: {scores.mean():.4f}")
-print(f"Standard deviation: {scores.std():.4f}")
 
 # Logistic Regression (PCA)
 logistic_pca_pipeline = Pipeline([
     ("scaler", StandardScaler()),
     ("pca", PCA(n_components=n)),
-    ("logistic", LogisticRegression(
-        C=1.0,
-        max_iter=1000,
-        solver="liblinear",
-    ))
+    (
+        "logistic",
+        LogisticRegression(
+            C=1.0,
+            max_iter=1000,
+            solver="liblinear",
+        ),
+    ),
 ])
 
-scores = cross_val_score(
-    logistic_pca_pipeline,
-    X_train,
-    y_train,
-    cv=5,
+cv_results.append(
+    run_cross_validation(
+        model_name="Logistic Regression — PCA",
+        model=logistic_pca_pipeline,
+        X_data=X_train,
+        y_data=y_train,
+    )
 )
 
-cv_results.append({
-    "Model": "Logistic Regression — PCA",
-    "Mean Accuracy": scores.mean(),
-    "Std Dev": scores.std(),
-})
-
-print("\nLogistic Regression — PCA Cross-Validation")
-print(f"Fold scores: {scores}")
-print(f"Mean accuracy: {scores.mean():.4f}")
-print(f"Standard deviation: {scores.std():.4f}")
 
 # Summary table
 cv_results_df = pd.DataFrame(cv_results)

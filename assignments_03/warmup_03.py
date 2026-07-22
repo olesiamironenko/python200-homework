@@ -278,12 +278,18 @@ for n in n_values:
 
         reconstructions[n].append(reconstructed_digit)
 
-# Build a grid of subplots with:
-# 5 rows = Original + n values 2, 5, 15, and 40
-# # 5 columns = first 5 digits
+# Build a 5 x 5 grid of subplots:
+# Row 0: Original digits
+# Row 1: Reconstructions with n = 2
+# Row 2: Reconstructions with n = 5
+# Row 3: Reconstructions with n = 15
+# Row 4: Reconstructions with n = 40
+# Columns 0-4: The first 5 digits in X_digits
+row_labels = ["Original", "n = 2", "n = 5", "n = 15", "n = 40"]
+
 fig, axes = plt.subplots(5, 5, figsize=(9, 9))
 
-# Original digits in the first row
+# Row 0: Original digits
 for sample_idx in range(5):
     axes[0, sample_idx].imshow(
         images[sample_idx],
@@ -295,13 +301,13 @@ for sample_idx in range(5):
     axes[0, sample_idx].axis("off")
 
 axes[0, 0].set_ylabel(
-    "Original",
+    row_labels[0],
     rotation=0,
     labelpad=35,
     va="center"
 )
 
-# Reconstructed digits in the remaining rows
+# Rows 1-4: PCA reconstructions for n = 2, 5, 15, and 40
 for row_idx, n in enumerate(n_values, start=1):
     for sample_idx in range(5):
         axes[row_idx, sample_idx].imshow(
@@ -311,7 +317,7 @@ for row_idx, n in enumerate(n_values, start=1):
         axes[row_idx, sample_idx].axis("off")
 
     axes[row_idx, 0].set_ylabel(
-        f"n = {n}",
+        row_labels[row_idx],
         rotation=0,
         labelpad=35,
         va="center"
