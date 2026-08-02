@@ -1,0 +1,25 @@
+{
+    "python_version": "3.9.6",
+    "scikit_learn_version": "1.6.1",
+    "feature_names": [
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "precipitation_sum",
+        "wind_speed_10m_max"
+    ],
+    "best_hyperparameters": {
+        "logistic__C": 100.0
+    },
+    "test_auc": 0.6658615136876006,
+    "city": {
+        "name": "Wayne, New Jersey",
+        "latitude": 40.9254,
+        "longitude": -74.2765
+    },
+    "label_thresholds": {
+        "temperature_2m_max": "between 7\u00b0C and 26\u00b0C",
+        "temperature_2m_min": "at least 0\u00b0C",
+        "precipitation_sum": "less than 3.0 mm",
+        "wind_speed_10m_max": "less than 30 km/h"
+    }
+}
