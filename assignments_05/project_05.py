@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from openai import OpenAI
 import json
+import textwrap
 
 load_dotenv()
 client = OpenAI()
@@ -82,25 +83,38 @@ def rewrite_bullets(bullets: list[str]) -> list[dict]:
     elif response.startswith("```"):
         response = response.removeprefix("```").removesuffix("```").strip()
 
-    rewritten = json.loads(response)
+    try:
+        rewritten = json.loads(response)
+    except json.JSONDecodeError:
+        print("Could not parse the rewritten bullet points. Please try again.")
+        return []
 
+    # Print the original and improved bullet points side by side
     print("\nRewritten Resume Bullet Points:")
-    print("-" * 60)
+    print("-" * 100)
+    print(f"{'Original':<45} | {'Improved'}")
+    print("-" * 100)
 
     for item in rewritten:
-        print(f"Original: {item['original']}")
-        print(f"Improved: {item['improved']}")
-        print()
+        original = textwrap.wrap("- " + item["original"], width=45)
+        improved = textwrap.wrap("- " + item["improved"], width=50)
 
-    return rewritten
+        rows = max(len(original), len(improved))
 
-bullets = [
+        for i in range(rows):
+            left = original[i] if i < len(original) else ""
+            right = improved[i] if i < len(improved) else ""
+            print(f"{left:<45} | {right}")
+
+        print("-" * 100)
+
+raw_bullets = [
     "Helped customers with their problems",
     "Made reports for the management team",
     "Worked with a team to finish the project on time",
 ]
 
-rewrite_bullets(bullets)
+rewritten = rewrite_bullets(raw_bullets)
 
 # The original bullet points were weak because they were vague, used weak action
 # verbs, and did not clearly communicate the value or impact of the work.
@@ -245,7 +259,7 @@ def run_chatbot():
                     break
                 if line:
                     raw_bullets.append(line)
-            rewrite_bullets(raw_bullets)
+            rewritten = rewrite_bullets(raw_bullets)
 
         # 6. Check if the user wants a cover letter
         elif "cover letter" in user_input.lower():
