@@ -108,6 +108,8 @@ def rewrite_bullets(bullets: list[str]) -> list[dict]:
 
         print("-" * 100)
 
+    return rewritten
+
 raw_bullets = [
     "Helped customers with their problems",
     "Made reports for the management team",
@@ -259,7 +261,7 @@ def run_chatbot():
                     break
                 if line:
                     raw_bullets.append(line)
-            rewritten = rewrite_bullets(raw_bullets)
+            rewrite_bullets(raw_bullets)
 
         # 6. Check if the user wants a cover letter
         elif "cover letter" in user_input.lower():

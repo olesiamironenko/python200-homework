@@ -95,6 +95,11 @@ response = client.chat.completions.create(
 print("\nResponse with max_tokens=15:")
 print(response.choices[0].message.content)
 
+# The response was cut off because max_tokens limited how many tokens the model
+# could generate. In a real application, max_tokens can be useful for controlling
+# response length, reducing API usage and cost, and preventing unnecessarily long
+# outputs.
+
 
 # --- System Messages and Personas ---
 
