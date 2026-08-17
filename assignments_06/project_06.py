@@ -42,6 +42,8 @@ for question in questions:
     print(f"\nQuestion: {question}")
     print(f"Answer: {response}")
 
+    print("\nRetrieved Sources:")
+
     top_node = response.source_nodes[0]
 
     file_name = top_node.node.metadata.get("file_name", "Unknown")
@@ -74,10 +76,14 @@ print(f"Answer: {response}")
 print("\nRetrieved Sources:")
 
 for i, node in enumerate(response.source_nodes, start=1):
+    file_name = node.node.metadata.get("file_name", "Unknown")
+    score = node.score
+    chunk_text = node.node.get_content()
+    
     print(f"\nSource {i}:")
-    print(f"Document: {node.node.metadata.get('file_name', 'Unknown')}")
-    print(f"Similarity Score: {node.score:.4f}")
-    print(f"Chunk Preview: {node.node.get_content()[:200]}...") 
+    print(f"Document: {file_name}")
+    print(f"Similarity Score: {score:.4f}")
+    print(f"Chunk Preview: {chunk_text[:200]}...") 
 
 # I asked whether Groundwork roasts its own coffee beans because I expected the
 # documents would not answer that question directly. Although the retrieved
