@@ -209,3 +209,206 @@ print(f"\nSelected document: {result[0][0]}")
 # | Storage format         | Plain text dictionary         | Embedding vectors in a   |
 # |                        |                               | vector DB.               |
 # | Relevance score        | Number of overlapping keywords| Cosine similarity score  |
+
+
+# --- LlamaIndex ---
+
+
+# LlamaIndex Q1
+
+from dotenv import load_dotenv
+import os
+
+if load_dotenv():
+    print("success")
+else:
+    print("oops")
+
+from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
+
+docs_dir = "resources/brightleaf_pdfs"
+assert os.path.isdir(docs_dir), f"Document directory not found: {docs_dir}"
+
+# Load documents directly from PDFs in the folder
+docs = SimpleDirectoryReader(docs_dir).load_data()
+
+# Build a vector index automatically (handles chunking + embeddings)
+index = VectorStoreIndex.from_documents(docs)
+
+query_engine = index.as_query_engine(similarity_top_k=3)
+
+questions = [
+    "What employee benefits does BrightLeaf offer?",
+    "What are BrightLeaf's security policies?",
+]
+
+for q in questions:
+    response = query_engine.query(q)
+
+    print(f"\nQuestion: {q}")
+    print(f"Answer: {response}")
+
+    print("\nRetrieved source nodes:")
+
+    for i, node_with_score in enumerate(response.source_nodes, start=1):
+        score = node_with_score.score
+        text = node_with_score.node.get_content()
+
+        print(f"\nSource {i}")
+        print(f"Similarity score: {score:.4f}")
+        print(f"Text: {text[:150]}")
+
+# Query 1 observations:
+# The retrieved chunks are mostly relevant. The first chunk comes from the
+# employee benefits document and directly answers the question. The second and
+# third chunks (security policy and mission statement) are less relevant but
+# still relate to the company.
+#
+# The model's response is confident and specific. It summarizes the benefits
+# without using uncertain phrases such as "based on the provided context" or
+# "I'm not sure."
+#
+# It was a little unexpected that the security policy and mission statement
+# were retrieved, since they are not directly about employee benefits.
+
+# Query 2 observations:
+# The retrieved chunks are mostly relevant. The first chunk comes from the
+# security policy document and directly answers the question. The second and
+# third chunks (employee benefits and mission statement) are less relevant.
+#
+# The model's response is confident and specific. It clearly summarizes the
+# company's security policies without hedging or expressing uncertainty.
+#
+# It was somewhat unexpected that the employee benefits and mission statement
+# documents were retrieved, since they are only loosely related to security.
+
+
+# LlamaIndex Q2
+
+q = questions[0]
+
+for k in [1, 5]:
+    print(f"\nsimilarity_top_k = {k}")
+
+    query_engine = index.as_query_engine(similarity_top_k=k)
+    response = query_engine.query(q)
+
+    print(f"\nQuestion: {q}")
+    print(f"Answer: {response}")
+
+    print("\nRetrieved source nodes:")
+    for i, node_with_score in enumerate(response.source_nodes, start=1):
+        print(f"Source {i}: score={node_with_score.score:.4f}")
+
+# The response with similarity_top_k=1 was already accurate and complete because
+# the most relevant employee benefits document contained enough information to
+# answer the question.
+#
+# With similarity_top_k=5, the response became slightly more detailed and
+# included a few additional benefit details, but the main answer did not change.
+#
+# More retrieved context is not always better. Additional chunks can sometimes
+# add useful details, but they can also introduce less relevant information and
+# make the response less focused.
+
+
+# LlamaIndex Q3
+
+q = "Why did BrightLeaf discontinue the HelioPanel X5?"
+
+response = index.as_query_engine(similarity_top_k=3).query(q)
+
+print(f"\nQuestion: {q}")
+print(f"Answer: {response}")
+
+print("\nRetrieved source nodes:")
+for i, node_with_score in enumerate(response.source_nodes, start=1):
+    print(f"\nSource {i}")
+    print(f"Similarity score: {node_with_score.score:.4f}")
+    print(node_with_score.node.get_content())
+
+# I expected this question to be difficult because it assumes that the
+# HelioPanel X5 was discontinued, but the documents never state that this
+# happened.
+#
+# The pipeline retrieved the correct product specification and financial
+# documents, but the model incorrectly assumed that the X5 was discontinued
+# when the X7 was introduced. This information is not supported by the
+# retrieved documents, making the response a hallucination.
+#
+# To handle this type of query better, I would add a relevance or confidence
+# check and instruct the model to say that the documents do not provide enough
+# information instead of making unsupported assumptions.
+
+
+# LlamaIndex Q4
+
+from llama_index.llms.openai import OpenAI
+from llama_index.core.evaluation import FaithfulnessEvaluator, RelevancyEvaluator
+
+# Make LlamaIndex's built-in evaluators use GPT-4o-mini for judging faithfulness and relevancy
+judge_llm = OpenAI(model="gpt-4o-mini")
+
+faithfulness_evaluator = FaithfulnessEvaluator(llm=judge_llm)
+relevancy_evaluator = RelevancyEvaluator(llm=judge_llm)
+
+# Evaluation helper function
+def evaluate_query(query, label):
+    response = query_engine.query(query)
+
+    faithfulness = faithfulness_evaluator.evaluate_response(
+        query=query,
+        response=response,
+    )
+
+    relevancy = relevancy_evaluator.evaluate_response(
+        query=query,
+        response=response,
+    )
+
+    print(f"\n{label}")
+    print(f"Question: {query}")
+    print(f"Faithfulness score: {faithfulness.score}")
+    print(f"Relevancy score: {relevancy.score}")
+
+    return faithfulness, relevancy
+
+# Evaluate good query
+evaluate_query(
+    "What employee benefits does BrightLeaf offer?",
+    "Good query"
+)
+
+# Evaluate bad query
+evaluate_query(
+    "What is BrightLeaf's stock price?",
+    "Bad query"
+)
+
+# A faithfulness score of 1.0 means the response is fully supported by the
+# retrieved context. A score of 0.0 indicates that the response is not supported
+# by the retrieved context and may contain information that was not grounded in
+# the documents.
+#
+# Relevancy measures how well the response addresses the user's question.
+# Faithfulness is different because it checks whether the answer is supported by
+# the retrieved context. A response can be relevant to the question but still
+# be unfaithful if it includes unsupported information.
+#
+# The scores changed between the two queries. The employee benefits query
+# received a faithfulness score of 1.0 and a relevancy score of 1.0 because the
+# answer was supported by the BrightLeaf documents and directly addressed the
+# question. The stock price query received a faithfulness score of 0.0 but a
+# relevancy score of 1.0. This suggests that the response still addressed the
+# stock price question, but the answer was not supported by the retrieved
+# BrightLeaf documents.
+#
+# The "LLM-as-a-judge" approach uses another language model to evaluate the
+# quality of an LLM response. It is useful for RAG evaluation because responses
+# are often open-ended and can be phrased in many different correct ways. A
+# simple accuracy metric based on exact matches would not reliably measure
+# whether an answer is relevant to the question or grounded in the retrieved
+# context.
+
+
+
